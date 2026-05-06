@@ -6,7 +6,8 @@
     %APPDATA%\Autodesk\Revit\Addins\<version>\
     %ProgramData%\Autodesk\Revit\Addins\<version>\
 
-  Update <Assembly> to the absolute path of DetailItem.dll after building.
+  The project file can also copy this manifest automatically to the Revit 2025
+  add-ins folder after build.
 -->
 <RevitAddIns>
   <AddIn Type="Command">
@@ -15,9 +16,16 @@
     <Description>Load all Detail Item elements from the active view into a sortable, filterable form. Select items to highlight them in the Properties Panel.</Description>
     <VisibilityMode>AlwaysVisible</VisibilityMode>
 
-    <!-- Absolute path to the built DLL.  Adjust as needed. -->
-    <Assembly>%APPDATA%\Autodesk\Revit\Addins\2025\DetailItem\DetailItem.dll</Assembly>
+    <!--
+      Revit manifests are usually placed in:
+      %APPDATA%\Autodesk\Revit\Addins\2025\
+
+      If this manifest is copied there directly, point Assembly to the deployed DLL.
+      Adjust this path to match your actual deployment location.
+    -->
+    <Assembly>%APPDATA%\Autodesk\Revit\Addins\2025\DetailItem.dll</Assembly>
     <FullClassName>DetailItem.Command</FullClassName>
+
 
     <!--
       Generate a new GUID for each distinct add-in by running:

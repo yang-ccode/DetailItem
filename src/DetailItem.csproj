@@ -17,6 +17,8 @@
     -->
     <RevitAPIPath Condition="'$(RevitAPIPath)' == ''">$(REVIT_API_PATH)</RevitAPIPath>
     <RevitAPIPath Condition="'$(RevitAPIPath)' == ''">C:\Program Files\Autodesk\Revit 2025</RevitAPIPath>
+    <RevitAddinsPath Condition="'$(RevitAddinsPath)' == ''">$(APPDATA)\Autodesk\Revit\Addins\2025</RevitAddinsPath>
+    <RevitDeploymentPath Condition="'$(RevitDeploymentPath)' == ''">$(RevitAddinsPath)\DetailItem</RevitDeploymentPath>
     <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
@@ -38,4 +40,29 @@
       <DependentUpon>DetailItemForm.cs</DependentUpon>
     </Compile>
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\manifest\DetailItem.addin">
+      <Link>DetailItem.addin</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="DeployToRevitAddins" AfterTargets="Build">
+    <MakeDir Directories="$(RevitDeploymentPath)" />
+
+    <ItemGroup>
+      <DeployFiles Include="$(TargetDir)**\*.*"
+                   Exclude="$(TargetDir)runtimes\**\*.*;$(TargetDir)ref\**\*.*;$(TargetDir)refs\**\*.*" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(DeployFiles)"
+          DestinationFolder="$(RevitDeploymentPath)\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+
+    <Copy SourceFiles="$(ProjectDir)..\manifest\DetailItem.addin"
+          DestinationFiles="$(RevitAddinsPath)\DetailItem.addin"
+          SkipUnchangedFiles="true" />
+  </Target>
 </Project>
+
