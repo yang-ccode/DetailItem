@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Revit Add-In Manifest – DetailItem
+  ===================================
+  Copy this file (or symlink it) to one of the Revit add-ins folders:
+    %APPDATA%\Autodesk\Revit\Addins\<version>\
+    %ProgramData%\Autodesk\Revit\Addins\<version>\
+
+  Update <Assembly> to the absolute path of DetailItem.dll after building.
+-->
+<RevitAddIns>
+  <AddIn Type="Command">
+    <Name>Detail Item Manager</Name>
+    <Text>Detail Item Manager</Text>
+    <Description>Load all Detail Item elements from the active view into a sortable, filterable form. Select items to highlight them in the Properties Panel.</Description>
+    <VisibilityMode>AlwaysVisible</VisibilityMode>
+
+    <!-- Absolute path to the built DLL.  Adjust as needed. -->
+    <Assembly>%APPDATA%\Autodesk\Revit\Addins\2024\DetailItem\DetailItem.dll</Assembly>
+    <FullClassName>DetailItem.Command</FullClassName>
+
+    <!--
+      Generate a new GUID for each distinct add-in by running:
+        [System.Guid]::NewGuid() in PowerShell
+    -->
+    <ClientId>3F7A2B1C-9D4E-4F60-A812-5C6E3D2A1B04</ClientId>
+
+    <VendorId>com.yangccode</VendorId>
+    <VendorDescription>yang-ccode</VendorDescription>
+  </AddIn>
+</RevitAddIns>
