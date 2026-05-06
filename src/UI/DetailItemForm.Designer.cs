@@ -169,9 +169,9 @@ namespace DetailItem.UI
             this.ShowInTaskbar       = false;
 
             // Add controls (order matters: Fill panel must be added after Top panels)
-            this.Controls.Add(this.dgvItems);       // Fill  – added first
-            this.Controls.Add(this.pnlToolbar);     // Top   – stacks above Fill
-            this.Controls.Add(this.pnlTop);         // Top   – stacks above toolbar
+            this.Controls.Add(this.dgvItems);
+            this.Controls.Add(this.pnlToolbar);
+            this.Controls.Add(this.pnlTop);
 
             this.pnlTop.ResumeLayout(false);
             this.pnlTop.PerformLayout();

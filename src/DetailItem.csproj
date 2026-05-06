@@ -8,14 +8,16 @@
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
+    <DefineConstants>$(DefineConstants);REVIT2024_OR_GREATER</DefineConstants>
 
     <!--
       Set RevitAPIPath to the folder that contains RevitAPI.dll and RevitAPIUI.dll.
-      Default: Revit 2024 installation.  Override in a Directory.Build.props or
+      Default: Revit 2025 installation.  Override in a Directory.Build.props or
       via the environment variable REVIT_API_PATH.
     -->
     <RevitAPIPath Condition="'$(RevitAPIPath)' == ''">$(REVIT_API_PATH)</RevitAPIPath>
-    <RevitAPIPath Condition="'$(RevitAPIPath)' == ''">C:\Program Files\Autodesk\Revit 2024</RevitAPIPath>
+    <RevitAPIPath Condition="'$(RevitAPIPath)' == ''">C:\Program Files\Autodesk\Revit 2025</RevitAPIPath>
+    <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
   <!-- Revit API references – not copied to output (Revit loads them at runtime) -->
@@ -37,4 +39,7 @@
     </Compile>
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
 </Project>

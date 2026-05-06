@@ -16,7 +16,7 @@
     <VisibilityMode>AlwaysVisible</VisibilityMode>
 
     <!-- Absolute path to the built DLL.  Adjust as needed. -->
-    <Assembly>%APPDATA%\Autodesk\Revit\Addins\2024\DetailItem\DetailItem.dll</Assembly>
+    <Assembly>%APPDATA%\Autodesk\Revit\Addins\2025\DetailItem\DetailItem.dll</Assembly>
     <FullClassName>DetailItem.Command</FullClassName>
 
     <!--

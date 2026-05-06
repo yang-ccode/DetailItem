@@ -1,4 +1,3 @@
-using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DetailItem.Services;
 using System;
@@ -21,7 +20,7 @@ namespace DetailItem.UI
     ///   • All sortable columns (click header to sort asc/desc).
     ///   • Refresh button to reload data from the current active view.
     /// </summary>
-    public partial class DetailItemForm : Form
+    public partial class DetailItemForm : System.Windows.Forms.Form
     {
         // ──────────────────────────────────────────────────────────────────────
         // Fields
@@ -39,6 +38,9 @@ namespace DetailItem.UI
 
         /// <summary>Prevents SelectionChanged from firing while programmatic row selections happen.</summary>
         private bool _suppressSelectionChanged;
+
+        /// <summary>Tracks the last requested Revit selection to avoid re-raising identical requests.</summary>
+        private List<long> _lastRequestedSelection = new List<long>();
 
         // Column name constants used throughout the class
         private const string ColCheck   = "IsChecked";
@@ -196,8 +198,8 @@ namespace DetailItem.UI
         private void UpdateItemCount()
         {
             int total   = _dataTable.Rows.Count;
-            int checked_ = _dataTable.AsEnumerable()
-                           .Count(r => r.Field<bool>(ColCheck));
+            int checked_ = _dataTable.Rows.Cast<DataRow>()
+                           .Count(r => r[ColCheck] != DBNull.Value && (bool)r[ColCheck]);
             lblStatus.Text = $"{total} items  |  {checked_} checked";
         }
 
@@ -207,8 +209,8 @@ namespace DetailItem.UI
         private void UpdateCheckAllState()
         {
             int total   = _dataTable.Rows.Count;
-            int checked_ = _dataTable.AsEnumerable()
-                           .Count(r => r.Field<bool>(ColCheck));
+            int checked_ = _dataTable.Rows.Cast<DataRow>()
+                           .Count(r => r[ColCheck] != DBNull.Value && (bool)r[ColCheck]);
 
             _suppressCheckAllChange = true;
             try
@@ -234,10 +236,24 @@ namespace DetailItem.UI
         /// </summary>
         private void SelectInRevit(IEnumerable<long> elementIds)
         {
-            _selectionHandler.ElementIds = elementIds
+            if (IsDisposed || Disposing)
+                return;
+
+            List<long> ids = elementIds
+                .Where(id => id != 0L)
+                .Distinct()
+                .ToList();
+
+            if (_lastRequestedSelection.SequenceEqual(ids))
+                return;
+
+            _selectionHandler.ElementIds = ids
                 .Select(id => ElementIdHelper.Create(id))
                 .ToList();
-            _externalEvent.Raise();
+
+            ExternalEventRequest request = _externalEvent.Raise();
+            if (request == ExternalEventRequest.Accepted)
+                _lastRequestedSelection = ids;
         }
 
         // ──────────────────────────────────────────────────────────────────────
@@ -329,9 +345,9 @@ namespace DetailItem.UI
 
         private void btnHighlightChecked_Click(object sender, EventArgs e)
         {
-            var ids = _dataTable.AsEnumerable()
-                .Where(r => r.Field<bool>(ColCheck))
-                .Select(r => r.Field<long>(ColElemId))
+            var ids = _dataTable.Rows.Cast<DataRow>()
+                .Where(r => r[ColCheck] != DBNull.Value && (bool)r[ColCheck])
+                .Select(r => Convert.ToInt64(r[ColElemId]))
                 .ToList();
 
             SelectInRevit(ids);
