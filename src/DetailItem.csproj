@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>DetailItem</AssemblyName>
+    <RootNamespace>DetailItem</RootNamespace>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+
+    <!--
+      Set RevitAPIPath to the folder that contains RevitAPI.dll and RevitAPIUI.dll.
+      Default: Revit 2024 installation.  Override in a Directory.Build.props or
+      via the environment variable REVIT_API_PATH.
+    -->
+    <RevitAPIPath Condition="'$(RevitAPIPath)' == ''">$(REVIT_API_PATH)</RevitAPIPath>
+    <RevitAPIPath Condition="'$(RevitAPIPath)' == ''">C:\Program Files\Autodesk\Revit 2024</RevitAPIPath>
+  </PropertyGroup>
+
+  <!-- Revit API references – not copied to output (Revit loads them at runtime) -->
+  <ItemGroup>
+    <Reference Include="RevitAPI">
+      <HintPath>$(RevitAPIPath)\RevitAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>$(RevitAPIPath)\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Form designer file pairs -->
+  <ItemGroup>
+    <Compile Update="UI\DetailItemForm.Designer.cs">
+      <DependentUpon>DetailItemForm.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+</Project>

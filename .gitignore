@@ -1,0 +1,30 @@
+# Build outputs
+bin/
+obj/
+*.user
+*.suo
+*.vs/
+.vs/
+
+# NuGet
+packages/
+*.nupkg
+
+# Visual Studio
+*.ncb
+*.sdf
+*.opensdf
+*.cachefile
+*.VC.opendb
+*.VC.db
+_ReSharper*/
+.idea/
+*.DotSettings
+
+# Resharper / Rider
+_ReSharper*/
+*.DotSettings
+
+# OS
+.DS_Store
+Thumbs.db
