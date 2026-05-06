@@ -38,8 +38,4 @@
       <DependentUpon>DetailItemForm.cs</DependentUpon>
     </Compile>
   </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Windows.Forms" />
-  </ItemGroup>
 </Project>
