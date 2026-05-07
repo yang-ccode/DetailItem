@@ -16,6 +16,54 @@ namespace DetailItem.Services
         private const BuiltInCategory DetailItemCategory = BuiltInCategory.OST_DetailComponents;
 
         /// <summary>
+        /// Returns Detail Item instances collected from all eligible views in the project.
+        /// </summary>
+        public static List<DetailItemRow> CollectAllInProject(Document doc, string? selectedParameterName)
+        {
+            if (doc is null) throw new ArgumentNullException(nameof(doc));
+
+            var detailItems = new List<DetailItemRow>();
+
+            var elements = new FilteredElementCollector(doc)
+                .OfCategory(DetailItemCategory)
+                .WhereElementIsNotElementType()
+                .ToElements();
+
+            foreach (Element elem in elements)
+            {
+                string activeViewName = "N/A";
+                if (doc.GetElement(elem.OwnerViewId) is View ownerView)
+                {
+                    activeViewName = ownerView.Name;
+                }
+
+                string paramName = string.Empty;
+                string paramValue = string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(selectedParameterName))
+                {
+                    Parameter? param = elem.LookupParameter(selectedParameterName);
+                    if (param != null)
+                    {
+                        paramName = param.Definition?.Name ?? selectedParameterName!;
+                        paramValue = GetValueString(param);
+                    }
+                }
+
+                detailItems.Add(new DetailItemRow
+                {
+                    ElementIdValue = elem.Id.IntegerValue,
+                    ActiveView = activeViewName,
+                    ParameterName = paramName,
+                    ParameterValue = paramValue,
+                    IsChecked = false
+                });
+            }
+
+            return detailItems;
+        }
+
+        /// <summary>
         /// Returns all Detail Item instances visible in <paramref name="activeView"/>,
         /// each mapped to a row with the currently selected parameter resolved.
         /// </summary>
@@ -27,18 +75,20 @@ namespace DetailItem.Services
         /// </param>
         public static List<DetailItemRow> Collect(
             Document doc,
-            View activeView,
+            View? activeView,
             string? selectedParameterName)
         {
             if (doc is null) throw new ArgumentNullException(nameof(doc));
-            if (activeView is null) throw new ArgumentNullException(nameof(activeView));
 
             var rows = new List<DetailItemRow>();
 
-            var elements = new FilteredElementCollector(doc, activeView.Id)
+            // Thu th?p t?t c? các ph?n t? trong d? án
+            var elements = new FilteredElementCollector(doc)
                 .OfCategory(DetailItemCategory)
                 .WhereElementIsNotElementType()
                 .ToElements();
+
+            Console.WriteLine($"Number of elements found in project: {elements.Count}"); // Debugging log
 
             bool resolveParam = !string.IsNullOrWhiteSpace(selectedParameterName);
 
@@ -59,11 +109,11 @@ namespace DetailItem.Services
 
                 rows.Add(new DetailItemRow
                 {
-                    ElementIdValue = ElementIdHelper.GetValue(elem.Id),
-                    ActiveView     = activeView.Name,
-                    ParameterName  = paramName,
+                    ElementIdValue = elem.Id.IntegerValue,
+                    ActiveView = activeView?.Name ?? "N/A",
+                    ParameterName = paramName,
                     ParameterValue = paramValue,
-                    IsChecked      = false,
+                    IsChecked = false
                 });
             }
 
@@ -74,14 +124,13 @@ namespace DetailItem.Services
         /// Returns a sorted, distinct list of parameter names available on any
         /// Detail Item element in <paramref name="activeView"/>.
         /// </summary>
-        public static List<string> GetParameterNames(Document doc, View activeView)
+        public static List<string> GetParameterNames(Document doc)
         {
             if (doc is null) throw new ArgumentNullException(nameof(doc));
-            if (activeView is null) throw new ArgumentNullException(nameof(activeView));
 
             var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            var elements = new FilteredElementCollector(doc, activeView.Id)
+            var elements = new FilteredElementCollector(doc)
                 .OfCategory(DetailItemCategory)
                 .WhereElementIsNotElementType()
                 .ToElements();

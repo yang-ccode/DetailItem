@@ -49,6 +49,9 @@ namespace DetailItem.UI
         private const string ColValue   = "ParameterValue";
         private const string ColElemId  = "ElementIdValue"; // hidden
 
+        // Add this field to the class, near other control declarations
+        private Label lblItemCount;
+
         // ──────────────────────────────────────────────────────────────────────
         // Construction
         // ──────────────────────────────────────────────────────────────────────
@@ -64,6 +67,16 @@ namespace DetailItem.UI
 
             InitializeComponent();
 
+            // Initialize lblItemCount if not already done in designer
+            lblItemCount = new Label
+            {
+                Name = "lblItemCount",
+                AutoSize = true,
+                Anchor = AnchorStyles.Left | AnchorStyles.Bottom,
+                Location = new System.Drawing.Point(10, this.ClientSize.Height - 30)
+            };
+            this.Controls.Add(lblItemCount);
+
             LoadParameterNames();
         }
 
@@ -77,16 +90,17 @@ namespace DetailItem.UI
             cboParameter.Items.Clear();
             cboParameter.Items.Add("(none)");
 
-            var doc  = _uiApp.ActiveUIDocument?.Document;
-            var view = _uiApp.ActiveUIDocument?.ActiveView;
+            var doc = _uiApp.ActiveUIDocument?.Document;
 
-            if (doc != null && view != null)
+            if (doc != null)
             {
-                foreach (string name in DetailItemCollector.GetParameterNames(doc, view))
+                foreach (string name in DetailItemCollector.GetParameterNames(doc))
+                {
                     cboParameter.Items.Add(name);
+                    Console.WriteLine($"Parameter found: {name}"); // Debugging log
+                }
             }
 
-            // Selecting index 0 triggers cboParameter_SelectedIndexChanged → LoadData
             cboParameter.SelectedIndex = 0;
         }
 
@@ -96,36 +110,31 @@ namespace DetailItem.UI
         /// </summary>
         private void LoadData()
         {
-            var doc  = _uiApp.ActiveUIDocument?.Document;
+            var doc = _uiApp.ActiveUIDocument?.Document;
             var view = _uiApp.ActiveUIDocument?.ActiveView;
 
-            // Build fresh DataTable
+            if (doc == null) return;
+
+            // Kiểm tra nếu view hiện tại là 3D
+            bool is3DView = view != null && view.GetType().Name == "View3D";
+
+            // Thu thập DetailItem
+            var rows = is3DView
+                ? DetailItemCollector.CollectAllInProject(doc, cboParameter.SelectedItem as string)
+                : DetailItemCollector.Collect(doc, view, cboParameter.SelectedItem as string);
+
+            // Xử lý dữ liệu và hiển thị trên form
             var dt = BuildEmptyDataTable();
-
-            if (doc != null && view != null)
+            foreach (var r in rows)
             {
-                string? selectedParam = cboParameter.SelectedItem as string;
-                if (selectedParam == "(none)") selectedParam = null;
-
-                var rows = DetailItemCollector.Collect(doc, view, selectedParam);
-
-                foreach (var r in rows)
-                {
-                    dt.Rows.Add(
-                        r.IsChecked,
-                        r.ActiveView,
-                        r.ParameterName,
-                        r.ParameterValue,
-                        r.ElementIdValue);
-                }
+                dt.Rows.Add(r.IsChecked, r.ActiveView, r.ParameterName, r.ParameterValue, r.ElementIdValue);
             }
 
-            // Replace grid data source atomically
             _suppressSelectionChanged = true;
             try
             {
                 dgvItems.DataSource = null;
-                _dataTable          = dt;
+                _dataTable = dt;
                 dgvItems.DataSource = _dataTable.DefaultView;
             }
             finally
@@ -197,10 +206,16 @@ namespace DetailItem.UI
 
         private void UpdateItemCount()
         {
-            int total   = _dataTable.Rows.Count;
-            int checked_ = _dataTable.Rows.Cast<DataRow>()
-                           .Count(r => r[ColCheck] != DBNull.Value && (bool)r[ColCheck]);
-            lblStatus.Text = $"{total} items  |  {checked_} checked";
+            if (_dataTable != null)
+            {
+                int totalItems = _dataTable.Rows.Count;
+                int checkedItems = _dataTable.AsEnumerable().Count(row => row.Field<bool>("IsChecked"));
+
+                lblItemCount.Text = $"{totalItems} items | {checkedItems} checked";
+
+                // Hiển thị số phần tử được chọn trong thanh Properties
+                Console.WriteLine($"Total items: {totalItems}, Checked items: {checkedItems}");
+            }
         }
 
         /// <summary>

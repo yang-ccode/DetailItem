@@ -23,7 +23,7 @@
       If this manifest is copied there directly, point Assembly to the deployed DLL.
       Adjust this path to match your actual deployment location.
     -->
-    <Assembly>%APPDATA%\Autodesk\Revit\Addins\2025\DetailItem.dll</Assembly>
+    <Assembly>C:\ProgramData\Autodesk\Revit\Addins\2025\DetailItem.dll</Assembly>
     <FullClassName>DetailItem.Command</FullClassName>
 
 

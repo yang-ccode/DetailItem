@@ -48,21 +48,20 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DetailItem\Services\" />
+  </ItemGroup>
+
   <Target Name="DeployToRevitAddins" AfterTargets="Build">
     <MakeDir Directories="$(RevitDeploymentPath)" />
 
     <ItemGroup>
-      <DeployFiles Include="$(TargetDir)**\*.*"
-                   Exclude="$(TargetDir)runtimes\**\*.*;$(TargetDir)ref\**\*.*;$(TargetDir)refs\**\*.*" />
+      <DeployFiles Include="$(TargetDir)**\*.*" Exclude="$(TargetDir)runtimes\**\*.*;$(TargetDir)ref\**\*.*;$(TargetDir)refs\**\*.*" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(DeployFiles)"
-          DestinationFolder="$(RevitDeploymentPath)\%(RecursiveDir)"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(DeployFiles)" DestinationFolder="$(RevitDeploymentPath)\%(RecursiveDir)" SkipUnchangedFiles="true" />
 
-    <Copy SourceFiles="$(ProjectDir)..\manifest\DetailItem.addin"
-          DestinationFiles="$(RevitAddinsPath)\DetailItem.addin"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(ProjectDir)..\manifest\DetailItem.addin" DestinationFiles="$(RevitAddinsPath)\DetailItem.addin" SkipUnchangedFiles="true" />
   </Target>
 </Project>
 
