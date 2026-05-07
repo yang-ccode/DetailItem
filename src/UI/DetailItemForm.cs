@@ -30,6 +30,12 @@ namespace DetailItem.UI
         private readonly ExternalEvent   _externalEvent;
         private readonly SelectionHandler _selectionHandler;
 
+        /// <summary>Raised when the Revit document changes and the grid should be refreshed.</summary>
+        private bool _refreshPending;
+
+        /// <summary>Set while the form is closing to stop any scheduled refresh.</summary>
+        private bool _isClosing;
+
         /// <summary>Backing DataTable – DataGridView is bound to its default DataView.</summary>
         private DataTable _dataTable = new DataTable();
 
@@ -66,6 +72,10 @@ namespace DetailItem.UI
             _selectionHandler = selectionHandler ?? throw new ArgumentNullException(nameof(selectionHandler));
 
             InitializeComponent();
+
+            _uiApp.Application.DocumentChanged += UiApp_DocumentChanged;
+            _uiApp.Idling += UiApp_Idling;
+            this.FormClosing += DetailItemForm_FormClosing;
 
             // Initialize lblItemCount if not already done in designer
             lblItemCount = new Label
@@ -104,6 +114,11 @@ namespace DetailItem.UI
             cboParameter.SelectedIndex = 0;
         }
 
+        private void RefreshGrid()
+        {
+            LoadData();
+        }
+
         /// <summary>
         /// (Re)build the DataTable from the active view using the currently
         /// selected parameter.
@@ -111,23 +126,27 @@ namespace DetailItem.UI
         private void LoadData()
         {
             var doc = _uiApp.ActiveUIDocument?.Document;
-            var view = _uiApp.ActiveUIDocument?.ActiveView;
 
             if (doc == null) return;
 
-            // Kiểm tra nếu view hiện tại là 3D
-            bool is3DView = view != null && view.GetType().Name == "View3D";
+            string? selectedParameter = cboParameter.SelectedItem as string;
 
-            // Thu thập DetailItem
-            var rows = is3DView
-                ? DetailItemCollector.CollectAllInProject(doc, cboParameter.SelectedItem as string)
-                : DetailItemCollector.Collect(doc, view, cboParameter.SelectedItem as string);
+            // Preserve checkbox state across refresh so editing a parameter does not
+            // clear user selections.
+            var checkedIds = _dataTable
+                ?.AsEnumerable()
+                .Where(r => r.Field<bool?>(ColCheck) == true)
+                .Select(r => r.Field<long>(ColElemId))
+                .ToHashSet() ?? new HashSet<long>();
+
+            var rows = DetailItemCollector.CollectAllInProject(doc, selectedParameter);
 
             // Xử lý dữ liệu và hiển thị trên form
             var dt = BuildEmptyDataTable();
             foreach (var r in rows)
             {
-                dt.Rows.Add(r.IsChecked, r.ActiveView, r.ParameterName, r.ParameterValue, r.ElementIdValue);
+                bool isChecked = checkedIds.Contains(r.ElementIdValue);
+                dt.Rows.Add(isChecked, r.ActiveView, r.ParameterName, r.ParameterValue, r.ElementIdValue);
             }
 
             _suppressSelectionChanged = true;
@@ -277,7 +296,9 @@ namespace DetailItem.UI
 
         private void cboParameter_SelectedIndexChanged(object sender, EventArgs e)
         {
-            LoadData();
+            // Intentionally do not refresh here.
+            // The Refresh button is responsible for reloading values when the
+            // selected parameter changes.
         }
 
         // ──────────────────────────────────────────────────────────────────────
@@ -370,7 +391,29 @@ namespace DetailItem.UI
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            LoadParameterNames();
+            RefreshGrid();
+        }
+
+        private void UiApp_DocumentChanged(object? sender, Autodesk.Revit.DB.Events.DocumentChangedEventArgs e)
+        {
+            _refreshPending = true;
+        }
+
+        private void UiApp_Idling(object? sender, Autodesk.Revit.UI.Events.IdlingEventArgs e)
+        {
+            if (!_refreshPending || _isClosing || IsDisposed || Disposing)
+                return;
+
+            if (!Visible)
+                return;
+
+            _refreshPending = false;
+            RefreshGrid();
+        }
+
+        private void DetailItemForm_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            _isClosing = true;
         }
 
         private void btnClose_Click(object sender, EventArgs e)
